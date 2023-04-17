@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tw">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<label>姓名:
+    <input id="Name" name="Name" type="text">
+</label><br>
+<label>留言:
+    <input id="Message" name="Message" type="text">
+</label><br>
+<label>你要贊助誰:
+    <select id="DonateTo" name="DonateTo">
+        {{ range $key, $ := .users }}
+            <option value="{{ $key }}">{{ $key }}</option>
+        {{ end }}
+{{/*        <option value="玲玲">玲玲</option>*/}}
+{{/*        <option value="依依">依依</option>*/}}
+{{/*        <option value="貳二">貳二</option>*/}}
+    </select>
+</label><br>
+<label>金額:
+    <input id="TotalAmount" name="TotalAmount" type="number">
+</label><br>
+<input type="button" value="確定" onclick="donate()">
+<!--<form action="/donate" method="post"></form>-->
+
+</body>
+<script>
+    function donate() {
+        const Name = document.getElementById("Name");
+        const Message = document.getElementById("Message");
+        const TotalAmount = document.getElementById("TotalAmount");
+        const DonateTo = document.getElementById("DonateTo");
+        const data=JSON.stringify({
+            Name:Name.value,
+            Message:Message.value,
+            TotalAmount:Number(TotalAmount.value),
+            DonateTo:DonateTo.value
+        })
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/donate")
+
+        xhr.onload = () => {
+            const obj = JSON.parse(xhr.responseText);
+            if (obj["status"]){
+                location.href = obj["redirectURL"]
+            }
+        }
+
+        xhr.send(data)
+    }
+</script>
+</html>
