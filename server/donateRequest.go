@@ -23,7 +23,7 @@ func (d *donateRequest) MarshalBinary() ([]byte, error) {
 }
 
 func (d *donateRequest) ToEcpayPaidData(simulatePaid bool) *database.EcpayPaidData {
-	return database.NewEcpayTable(d.ProductionOrdersData.MerchantTradeNo, d.Name, d.TotalAmount, d.DonateTo, d.Message, simulatePaid)
+	return database.NewEcpayPaidData(d.ProductionOrdersData.MerchantTradeNo, d.Name, d.TotalAmount, d.DonateTo, d.Message, simulatePaid)
 }
 
 func genNewOrdersData(TotalAmount int, TradeDesc string) ProductionOrdersData {
