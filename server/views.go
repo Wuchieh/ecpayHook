@@ -14,7 +14,6 @@ func createMyRender() multitemplate.Renderer {
 	r.AddFromFiles("donate", "templates/donate.gohtml")
 	r.AddFromFiles("showLiverAlert", "templates/showLiverAlert.gohtml")
 	for k := range livers {
-		fmt.Println(k)
 		r.AddFromFiles(k, fmt.Sprintf("templates/%s.gohtml", k))
 	}
 	return r

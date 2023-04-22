@@ -27,11 +27,11 @@ type setting struct {
 func init() {
 	var s setting
 	if file, err := os.ReadFile("setting.json"); err != nil {
-		log.Panicln("redis os.ReadFile Error", err)
+		panic("redis os.ReadFile Error" + err.Error())
 	} else {
 		err = json.Unmarshal(file, &s)
 		if err != nil {
-			log.Panicln("redis json.Unmarshal", err)
+			panic("redis json.Unmarshal" + err.Error())
 		}
 	}
 

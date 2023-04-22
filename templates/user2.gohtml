@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tw">
 <head>
@@ -50,47 +49,42 @@
         }
     </style>
     <script>
-        let showAlertStatus = false
+        let alertBuffer = []
 
         function showAlert(e) {
-            if (showAlertStatus === false) {
-                showAlertStatus = true
-                setTimeout(() => {
-                    liverAlertBody.style.opacity = "0"
-                    showAlertStatus = false
-                }, 5000)
+            const liverAlertText = document.getElementById("liverAlertText")
+            const liverAlertBody = document.getElementById("liverAlertBody")
 
-                const liverAlertText = document.getElementById("liverAlertText")
-                const liverAlertBody = document.getElementById("liverAlertBody")
+            const obj = JSON.parse(e)
+            console.log(obj)
 
-                const obj = JSON.parse(e)
-                console.log(obj)
-
-                liverAlertText.innerHTML = `<div>
+            liverAlertText.innerHTML = `<div>
                     <p>感謝 ${obj["Name"]} 贊助 ${obj["ProductionOrdersData"]["TotalAmount"]} 元</p>
                     <p>${obj["Message"]}</p>
                 </div>`
-                liverAlertBody.style.opacity = "1"
+            liverAlertBody.style.opacity = "1"
 
 
-                const text = obj["Message"];
-                const synthesis = new SpeechSynthesisUtterance(text);
-                synthesis.lang = 'zh-TW'; // 設定語言
-                synthesis.voiceURI = 'Google US English'; // 設定語音
-                synthesis.volume = 1; // 設定音量（0到1之間）
-                synthesis.rate = 1; // 設定速度（0.1到10之間）
-                synthesis.pitch = 1; // 設定音高（0到2之間）
-                window.speechSynthesis.speak(synthesis);
-
-            }else {
-                setTimeout(()=>{showAlert(e)},1000)
-            }
+            const text = obj["Message"];
+            const synthesis = new SpeechSynthesisUtterance(text);
+            synthesis.lang = 'zh-TW'; // 設定語言
+            synthesis.voiceURI = 'Google US English'; // 設定語音
+            synthesis.volume = 1; // 設定音量（0到1之間）
+            synthesis.rate = 1; // 設定速度（0.1到10之間）
+            synthesis.pitch = 1; // 設定音高（0到2之間）
+            window.speechSynthesis.speak(synthesis);
         }
 
         function wsConnect() {
             let wsStatus = false
             const user = document.getElementById("user").value
-            const ws = new WebSocket("wss://" + location.host + "/api/liver/ws/" + user)
+            let protocol = ""
+            if (location.protocol === "http:") {
+                protocol = "ws:/"
+            } else if (location.protocol === "https:") {
+                protocol = "wss:/"
+            }
+            const ws = new WebSocket(protocol + location.host + "/api/liver/ws/" + user)
 
             const reConnect = () => {
                 setTimeout(wsConnect, 1000)
@@ -106,7 +100,7 @@
             }
 
             ws.onmessage = (e) => {
-                showAlert(e.data)
+                alertBuffer.push(e.data)
             }
 
             ws.onopen = (e) => {
@@ -122,8 +116,27 @@
             }
         }
 
-        wsConnect()
+        let needAnime = true
 
+        async function ListeningAlertBuffer() {
+            if (alertBuffer.length > 0 && !window.speechSynthesis.speaking && needAnime) {
+                needAnime = false
+                const msg = alertBuffer.pop()
+                showAlert(msg)
+            } else if (!window.speechSynthesis.speaking) {
+                const liverAlertBody = document.getElementById("liverAlertBody")
+                liverAlertBody.style.opacity = "0"
+                needAnime = true
+            }
+
+            setTimeout(() => {
+                ListeningAlertBuffer()
+            }, 1000)
+        }
+
+
+        wsConnect()
+        ListeningAlertBuffer()
 
     </script>
 {{ end }}

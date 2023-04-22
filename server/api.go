@@ -31,17 +31,28 @@ func returnOrder(c *gin.Context) {
 
 func OrderProcessingLogic(id string, p map[string]string) {
 	if SimulatePaid, ok := p["SimulatePaid"]; ok {
+		orderData, err := getOrderData(id)
+		if err != nil {
+			return
+		}
 		switch SimulatePaid {
 		case "0":
-			fmt.Println("非模擬付款")
-			changeOrderStatus(id)
-			sendAlert(id)
+			changeOrderStatus(orderData)
+			sendAlert(orderData)
+			saveOrderData(orderData, false)
 		case "1":
-			fmt.Println("模擬付款")
 			if setting.LiveDebug {
-				sendAlert(id)
+				sendAlert(orderData)
+				saveOrderData(orderData, true)
 			}
 		}
+	}
+}
+
+func saveOrderData(data donateRequest, simulatePaid bool) {
+	if err := data.ToEcpayPaidData(simulatePaid).Save(); err != nil {
+		log.Println(err)
+		return
 	}
 }
 
@@ -71,6 +82,7 @@ func getReturnOrderData(c *gin.Context) (map[string]string, bool) {
 		return nil, false
 	}
 }
+
 func verifyReturnOrderData(r map[string]string) bool {
 	values := url.Values{}
 
@@ -107,9 +119,20 @@ func verifyReturnOrderData(r map[string]string) bool {
 }
 
 // 變更訂單狀態
-func changeOrderStatus(id string) {
+func changeOrderStatus(dr donateRequest) {
+	dr.PaymentStatus = true
+	binary, err := dr.MarshalBinary()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	redis.Set(fmt.Sprintf("donate_%s", dr.ProductionOrdersData.MerchantTradeNo), binary, 5*time.Minute)
+}
+
+func getOrderData(id string) (d donateRequest, err error) {
 	get := redis.Get(fmt.Sprintf("donate_%s", id))
-	if get.Err() != nil {
+	if err = get.Err(); err != nil {
 		log.Println(get.Err())
 		return
 	}
@@ -118,19 +141,11 @@ func changeOrderStatus(id string) {
 		log.Println(get.Err())
 		return
 	}
-	var dr donateRequest
-	if err := json.Unmarshal(bytes, &dr); err != nil {
+	if err = json.Unmarshal(bytes, &d); err != nil {
 		log.Println(err)
 		return
 	}
-	dr.PaymentStatus = true
-	binary, err := dr.MarshalBinary()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	redis.Set(fmt.Sprintf("donate_%s", id), binary, 5*time.Minute)
-	fmt.Println(fmt.Sprintf("感謝 %s 贊助 %s %d元\n%s", dr.Name, dr.DonateTo, dr.ProductionOrdersData.TotalAmount, dr.Message))
+	return
 }
 
 func ResultOrder(c *gin.Context) {

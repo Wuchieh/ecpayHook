@@ -10,5 +10,10 @@
 
   "RedisAddr": "172.29.186.119:6379",
   "RedisPassword":"",
-  "RedisDB": 0
+  "RedisDB": 0,
+
+  "databaseHost": "172.29.186.119",
+  "databaseUser": "wuchieh",
+  "databasePassword": "123",
+  "databaseDbname": "ecpayhook"
 }

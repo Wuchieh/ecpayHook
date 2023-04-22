@@ -1,6 +1,7 @@
 package server
 
 import (
+	"ecpayHook/database"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -17,8 +18,12 @@ type donateRequest struct {
 	ProductionOrdersData ProductionOrdersData `json:"ProductionOrdersData"`
 }
 
-func (r *donateRequest) MarshalBinary() ([]byte, error) {
-	return json.Marshal(r)
+func (d *donateRequest) MarshalBinary() ([]byte, error) {
+	return json.Marshal(d)
+}
+
+func (d *donateRequest) ToEcpayPaidData(simulatePaid bool) *database.EcpayPaidData {
+	return database.NewEcpayTable(d.ProductionOrdersData.MerchantTradeNo, d.Name, d.TotalAmount, d.DonateTo, d.Message, simulatePaid)
 }
 
 func genNewOrdersData(TotalAmount int, TradeDesc string) ProductionOrdersData {
@@ -45,5 +50,5 @@ func genNewOrdersData(TotalAmount int, TradeDesc string) ProductionOrdersData {
 }
 
 func getRedirectURL(id string) string {
-	return fmt.Sprintf("https://%s/donate/%s", setting.DomainName, id)
+	return fmt.Sprintf("https://%s/api/donate/%s", setting.DomainName, id)
 }

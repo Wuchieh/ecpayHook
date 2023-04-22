@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ecpayHook/database"
 	_ "ecpayHook/redis"
 	"ecpayHook/server"
 	"log"
@@ -11,6 +12,9 @@ import (
 
 func main() {
 	sc := make(chan os.Signal, 1)
+	if err := database.DatabaseInit(); err != nil {
+		panic(err)
+	}
 	go func() {
 		err := server.Run()
 		if err != nil {

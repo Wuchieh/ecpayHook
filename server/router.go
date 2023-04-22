@@ -12,12 +12,14 @@ func router(r *gin.Engine) {
 	api := r.Group("/api")
 	api.POST("/return/:id", returnOrder)
 	api.GET("/result/:id", ResultOrder)
+	api.POST("/donate", donate)
+	api.GET("/donate/:id", RedirectDonate)
 
 	liver := api.Group("/liver")
 	liver.GET("/showLiverAlert/*password", showLiverAlert)
 	liver.GET("/ws/:user", wsLiverAlert)
 }
 
-func test(c *gin.Context) {
+func _(c *gin.Context) {
 	c.String(200, "1|OK")
 }

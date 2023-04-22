@@ -1,7 +1,6 @@
 package server
 
 import (
-	"ecpayHook/redis"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -26,34 +25,12 @@ func init() {
 }
 
 // 發送通知
-func sendAlert(id string) {
+func sendAlert(dr donateRequest) {
 	go func() {
-		get := redis.Get("donate_" + id)
-		if err := get.Err(); err != nil {
-			log.Println(err)
-			return
-		}
-		redisByte, err := get.Bytes()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		var dr donateRequest
-		err = json.Unmarshal(redisByte, &dr)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
 		if _, ok := wsConnectUsers[dr.DonateTo]; ok {
 			for _, conn := range wsConnectUsers[dr.DonateTo] {
 				_ = conn.WriteJSON(dr)
 			}
-		}
-
-		if err != nil {
-			log.Println(err)
-			return
 		}
 	}()
 }
@@ -68,9 +45,8 @@ func showLiverAlert(c *gin.Context) {
 			user = k
 		}
 	}
-	fmt.Println(user)
 
-	c.HTML(200, "showLiverAlert", gin.H{"user": user})
+	c.HTML(200, user, gin.H{"user": user})
 }
 
 func wsLiverAlert(c *gin.Context) {

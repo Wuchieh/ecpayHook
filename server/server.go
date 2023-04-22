@@ -37,6 +37,7 @@ func Run() error {
 	setMode()
 	r := gin.Default()
 	r.HTMLRender = createMyRender()
+	r.Static("/api/static", "static")
 	router(r)
 	return r.Run(setting.ServerAddr)
 }
