@@ -4,6 +4,7 @@
 ## 需求
 ```
 Redis
+PostgreSQL
 ```
 
 ## 介紹
