@@ -6,19 +6,42 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
+	"unicode/utf8"
 )
 
 func donateLogic(c *gin.Context) {
 	var dr donateRequest
-	if err := c.BindJSON(&dr); err != nil || dr.TotalAmount < 65 || len(dr.Name) > 10 || len(dr.Name) == 0 || len(dr.Message) > 30 {
+	if err := c.BindJSON(&dr); err != nil {
 		log.Println(err)
 		c.JSON(400, gin.H{"status": false, "msg": "輸入的資料有誤"})
 		return
 	}
 
-	if !stringVerify.StringVerify(dr.Message) {
+	if dr.TotalAmount < 65 || utf8.RuneCountInString(dr.Name) > 10 || utf8.RuneCountInString(dr.Name) == 0 || utf8.RuneCountInString(dr.Message) > 30 {
+		c.JSON(400, gin.H{"status": false, "msg": "輸入的資料有誤"})
+		return
+	}
+
+	if !stringVerify.StringVerify(dr.Name, dr.Message) {
 		c.JSON(400, gin.H{"status": false, "msg": "輸入的資料中包含了敏感詞彙"})
+
+		go func() {
+			fileName := filepath.Join("log", fmt.Sprintf("%d.json", time.Now().Unix()))
+			binary, err := dr.MarshalBinary()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			err = os.WriteFile(fileName, binary, 0622)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}()
+
 		return
 	}
 

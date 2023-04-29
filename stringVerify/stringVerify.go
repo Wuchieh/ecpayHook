@@ -30,11 +30,13 @@ func init() {
 
 // StringVerify 輸出false代表有包含敏感字詞
 // 輸出true代表沒有包含敏感字詞，通過了驗證
-func StringVerify(input string) bool {
+func StringVerify(input ...string) bool {
 	// 檢查是否包含敏感字
 	for _, bannedWord := range bannedWordsList {
-		if strings.Contains(input, bannedWord) {
-			return false
+		for _, s := range input {
+			if strings.Contains(s, bannedWord) {
+				return false
+			}
 		}
 	}
 	return true
